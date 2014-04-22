@@ -111,7 +111,6 @@ class MapSprite extends Sprite
 	public function addLayer(id :String, layer :Entity)
 	{
 		#if debug Assert.that(!_names.exists(id), "You may not have duplicate layer names in a map.", [id]); #end
-		trace("Adding : " + id);
 
 		var s :Sprite = layer.get(Sprite);
 		if (s == null) {
