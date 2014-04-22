@@ -40,5 +40,4 @@ Matt Tuttle's pathfinding code was lifted from [Haxepunk-ai](https://github.com/
 
 The demos currently use the tilesets from an old [TutsPlus article](http://gamedevelopment.tutsplus.com/tutorials/introduction-to-tiled-map-editor-a-great-platform-agnostic-tool-for-making-level-maps--gamedev-2838).
 
-
 A few functions here and there were used for 2D array manipulation from Polygonal Labs [ds library](https://github.com/polygonal/ds). It was also used by Matt in the A* pathfinding code.
