@@ -1,7 +1,7 @@
 flambe-tiled
 ============
 
-flambe-tiled is a library for adding tile maps and map editing to the Flambe framework. Instead of tightly coupling the game map support to Tiled (TMX) maps,
+flambe-tiled is a library for adding tile maps and map editing to the [Flambe framework](https://github.com/aduros/flambe). Instead of tightly coupling the game map support to [Tiled Map Editor](http://www.mapeditor.org) (TMX) maps,
 it's written in such a way that you could easily create your own parser to creat tile layers, object layers, image layers, etc. Much of the code was
 adapted from my work on [SpongeBob: The Goo From Goo Lagoon](http://spongebob.nick.com/games/spongebob-squarepants-the-goo-from-goo-lagoon.html)
 
@@ -26,11 +26,12 @@ supporting the JSON export format for Tiled maps because:
 
 Roadmap
 -------
+Add instructions on how to use the JSON format in [Tiled](http://www.mapeditor.org).
 Add a easy to understand camera demo.
 Add a Nape physics demo.
 Add dynamic map refresh code in the demos.
-Better camera support. Possibly investigate zooming.
-Possibly add support for animated tiles.
+Look at my camera implementation again and possibly investigate zooming.
+Support for animated tiles.
 
 Credits
 -------
