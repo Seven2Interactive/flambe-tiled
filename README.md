@@ -27,15 +27,16 @@ supporting the JSON export format for Tiled maps because:
 
 Roadmap
 -------
-Add instructions on how to use the JSON format in [Tiled](http://www.mapeditor.org).
-Add a easy to understand camera demo.
-Add a Nape physics demo.
-Add dynamic map refresh code in the demos.
-Look at my camera implementation again and possibly investigate zooming.
-Support for animated tiles.
+- Add instructions on how to use the JSON format in [Tiled](http://www.mapeditor.org).
+- Add a easy to understand camera demo.
+- Add a Nape physics demo.
+- Add dynamic map refresh code in the demos.
+- Look at my camera implementation again and possibly investigate zooming.
+- Support for animated tiles.
 
 Credits
 -------
 The demos currently use the tilesets from an old [TutsPlus article](http://gamedevelopment.tutsplus.com/tutorials/introduction-to-tiled-map-editor-a-great-platform-agnostic-tool-for-making-level-maps--gamedev-2838).
 Matt Tuttle's pathfinding code
+
 A few functions here and there were used for 2D array manipulation from Polygonal Labs [ds library](https://github.com/polygonal/ds). It was also used by Matt in the A* pathfinding code.
