@@ -20,6 +20,7 @@ Tiled Support
 -------------
 Although there are a couple of implementations of Tiled support in Haxe, I wanted something very lightweight for mobile targets. I ended up settling on only
 supporting the JSON export format for Tiled maps because:
+
 1. The parsing code is extremely tiny compared to XML, and if it's Gzipped it's even more complex.
 2. You can still open the JSON format directly in Tiled. You don't need to keep TMX files at all!
 3. In many tests, the map definition files were nearly 1/4 the size compared to the XML equivalent. If you minify the json file, they're even smaller.
