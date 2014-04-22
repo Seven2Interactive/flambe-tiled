@@ -3,7 +3,7 @@ flambe-tiled
 
 flambe-tiled is a library for adding tile maps and map editing to the Flambe framework. Instead of tightly coupling the game map support to Tiled (TMX) maps,
 it's written in such a way that you could easily create your own parser to creat tile layers, object layers, image layers, etc. Much of the code was
-adapted from my work on [SpongeBob Goo Lagoon](http://spongebob.nick.com/games/spongebob-squarepants-the-goo-from-goo-lagoon.html)
+adapted from my work on [SpongeBob: The Goo From Goo Lagoon](http://spongebob.nick.com/games/spongebob-squarepants-the-goo-from-goo-lagoon.html)
 
 In my tests the implementation is lightweight and renders quick. Only the tiles which need to be rendered in your viewport will be drawn, increasing
 performance by quite a bit.
