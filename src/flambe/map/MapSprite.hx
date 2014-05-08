@@ -1,10 +1,13 @@
 package flambe.map;
 
 import flambe.animation.AnimatedFloat;
+import flambe.display.Graphics;
 import flambe.display.Sprite;
 import flambe.display.Texture;
-import flambe.display.Graphics;
 import flambe.Entity;
+import flambe.map.camera.BasicCamera;
+import flambe.map.camera.Camera;
+import flambe.map.TileSprite;
 import flambe.math.FMath;
 import flambe.math.Matrix;
 import flambe.math.Point;
@@ -12,9 +15,6 @@ import flambe.math.Rectangle;
 import flambe.System;
 import flambe.util.Arrays;
 import flambe.util.Assert;
-import flambe.map.camera.Camera;
-import flambe.map.camera.BasicCamera;
-import flambe.map.TileSprite;
 
 /**
  * A map which manages positioning and viewport of multiple layers. Contains support for a camera which can be positioned manually,
@@ -118,8 +118,8 @@ class MapSprite extends Sprite
 		}
 
 		// Adjust xy based on camera coordinates.
-		// s.getLocalMatrix().set(1,0,0,1, -camera.region.x, -camera.region.y);
-		s.setXY(-camera.region.x, -camera.region.y);
+		s.getLocalMatrix().set(1,0,0,1, -camera.region.x, -camera.region.y);
+		// s.setXY(-camera.region.x, -camera.region.y);
 
 		if (Type.getClass(s) == TileSprite) {
 			// Adjust the region to render.
@@ -181,8 +181,8 @@ class MapSprite extends Sprite
 				cast(layer, TileSprite).region.set(-camera.region.x, -camera.region.y, width._, height._); // Adjust the region to render.
 			}
 
-			layer.setXY(-camera.region.x, -camera.region.y);
-			// layer.getLocalMatrix().set(1,0,0,1,-camera.region.x, -camera.region.y);
+			// layer.setXY(-camera.region.x, -camera.region.y);
+			layer.getLocalMatrix().set(1,0,0,1,-camera.region.x, -camera.region.y);
 		}
 	}
 

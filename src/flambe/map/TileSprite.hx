@@ -2,14 +2,18 @@ package flambe.map;
 
 import flambe.display.Graphics;
 import flambe.display.Sprite;
+import flambe.display.Texture;
 import flambe.math.FMath;
 import flambe.math.Matrix;
 import flambe.math.Point;
 import flambe.math.Rectangle;
+import flambe.System;
 import flambe.util.Arrays;
 import flambe.util.Assert;
 import flambe.map.TileSymbol;
-
+#if html
+import js.html.Uint32Array;
+#end
 /**
  * A sprite which renders a tilemap and can be used by various tile engines, or used standalone.
  * @author Kipp Ashford
@@ -32,14 +36,23 @@ class TileSprite extends Sprite
 	/** The number of tiles along the y axis. */
 	public var rows (default, null) :Int;
 
+	private var draws :Int = 0;
+	private var time :Float = 0;
 	/**
 	 * The region of the map to draw in pixel values. If null, will render the entire map every drawing update. 
 	 * This does not automatically change the x, y of the TileSprite.
 	 */
 	public var region :Rectangle;
 
+#if html
+	/** comment */
+	private var _tiles :Uint32Array;
+#else
 	/** The flattened 2D array of tiles to render */
 	private var _tiles :Array<Int>;
+#end
+	/** comment */
+	private var _buffer :Texture;
 
 	/* ---------------------------------------------------------------------------------------- */
 	
@@ -51,8 +64,12 @@ class TileSprite extends Sprite
 		super();
 		this.symbols = symbols;
 		this.tileWidth = tileWidth;
-		this.tileHeight = tileHeight;	
+		this.tileHeight = tileHeight;
+#if js
+		_tiles = new Uint32Array(0);
+#else
 		_tiles = [];
+#end
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
@@ -67,9 +84,14 @@ class TileSprite extends Sprite
 	public function fromArray(tiles :Array<Int>, columns :Int, rows :Int) :TileSprite
 	{
 		Assert.that(columns * rows == tiles.length, "The number of tiles must match with the columns and rows information.", [columns, rows]);
+#if js
+		_tiles = new Uint32Array(tiles);
+#else
 		_tiles = tiles;
+#end
 		this.columns = columns;
 		this.rows = rows;
+		drawToBuffer();
 		return this;
 	}
 
@@ -85,17 +107,22 @@ class TileSprite extends Sprite
 	 */
 	public function resize(columns :Int, rows :Int)
 	{
-		#if debug
+#if debug
 		Assert.that(columns >= 2 && rows >= 2, "invalid size ", [columns, rows]);
-		#end
+#end
 
 		if (columns == this.columns && rows == this.rows) return;
 		var t = _tiles;
+
+#if js
+		_tiles = new Uint32Array(columns * rows);
+#else
 		_tiles = Arrays.create(columns * rows);
 		var ii :Int = _tiles.length;
 		while (ii-->0) {
-			_tiles[ii] = 0; // Make sure to never contain null values.
+			_tiles[ii] = 0; // We should never have null values.
 		}
+#end
 
 		var minX = columns < this.columns ? columns : this.columns;
 		var minY = rows < this.rows ? rows : this.rows;
@@ -111,6 +138,7 @@ class TileSprite extends Sprite
 
 		this.columns = columns;
 		this.rows = rows;
+		drawToBuffer();
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
@@ -134,6 +162,7 @@ class TileSprite extends Sprite
 			_tiles[t + i] = row[i];
 			// __set(t + i, row[i]);
 		}
+		drawToBuffer();
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
@@ -170,6 +199,7 @@ class TileSprite extends Sprite
 		}
 
 		columns++;
+		drawToBuffer();
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
@@ -185,6 +215,7 @@ class TileSprite extends Sprite
 	{
 		// Sets a tile with a given GID.
 		_tiles[ column + row * columns] = id;
+		drawToBuffer();
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
@@ -213,6 +244,7 @@ class TileSprite extends Sprite
 		while(ii-->0) {
 			_tiles[ii] = id;
 		}
+		drawToBuffer();
 		return this;
 	}
 
@@ -247,6 +279,7 @@ class TileSprite extends Sprite
 				}
 			}
 		}
+		drawToBuffer();
 		return this;
 	}
 
@@ -269,16 +302,23 @@ class TileSprite extends Sprite
 
 	/* ---------------------------------------------------------------------------------------- */
 	
-	override public function draw(g :Graphics)
+	private function drawToBuffer() :Void
 	{
-		if (!this.visible || this.alpha._ == 0)
-			return;
+		var totalWidth :Int = columns * tileWidth;
+		var totalHeight :Int = rows * tileHeight;
+		if (_buffer == null || (_buffer.width != totalWidth) || (_buffer.width != totalHeight)) {
+			if (_buffer != null) {
+				_buffer.dispose();
+			}
+			_buffer = System.renderer.createTexture(totalWidth, totalHeight);
+		}
 
-		// Calculate the area we should draw to. This is a must especially for larger maps.
+		// Calculate the area we should draw to.
 		var columnLength :Int = columns;
 		var rowLength :Int = rows;
 		var sX :Float = 0;
 		var sY :Float = 0;
+
 		if (region != null) {
 			sX = region.x;
 			sY = region.y;
@@ -286,21 +326,67 @@ class TileSprite extends Sprite
 			rowLength = FMath.clamp( Math.ceil( (region.height + tileHeight) / tileHeight), 0, Math.ceil( (rows * tileHeight + sY) / tileHeight) );
 		}
 
+		var right :Int = untyped (sX / tileWidth) >> 0;
+		var bottom :Int = untyped (sY / tileHeight) >> 0;
+
 		for (x in 0...columnLength) {
-			var tileX :Int = Math.floor(x - (sX / tileWidth));
+			var tileX :Int = x - right;
 			var paintX :Float = tileX * tileWidth;
 
 			for (y in 0...rowLength) {
-				var tileY :Int = Math.floor(y - (sY / tileHeight));
-				var paintY :Float = tileY * tileHeight;
+				var tileY :Int = y - bottom;
 				var gid = _tiles[ tileX + tileY * columns]; // The GID of the tile.
 
 				if (gid > 0) {
 					var symbol = symbols[gid];
-					g.drawSubTexture(symbol.atlas, paintX, paintY, symbol.x, symbol.y, symbol.width, symbol.height);
+					var paintY :Float = tileY * tileHeight;
+					_buffer.graphics.drawSubTexture(symbol.atlas, paintX, paintY, symbol.x, symbol.y, symbol.width, symbol.height);
 				}
 			}
 		}
+
+	}
+
+	/* ---------------------------------------------------------------------------------------- */
+	
+	override public function draw(g :Graphics)
+	{
+		if (!this.visible || _buffer == null)
+			return;
+		
+		g.drawTexture(_buffer,0,0);
+		// Calculate the area we should draw to.
+		// var columnLength :Int = columns;
+		// var rowLength :Int = rows;
+		// var sX :Float = 0;
+		// var sY :Float = 0;
+
+		// if (region != null) {
+		// 	sX = region.x;
+		// 	sY = region.y;
+		// 	columnLength = FMath.clamp( Math.ceil( (region.width + tileWidth) / tileWidth), 0, Math.ceil( (columns * tileWidth + sX) / tileWidth) );
+		// 	rowLength = FMath.clamp( Math.ceil( (region.height + tileHeight) / tileHeight), 0, Math.ceil( (rows * tileHeight + sY) / tileHeight) );
+		// }
+		// g.drawSubTexture(_buffer, -sX, -sY, -sX, -sY, columnLength * tileWidth, rowLength * tileHeight);
+
+		// var right :Int = untyped (sX / tileWidth) >> 0;
+		// var bottom :Int = untyped (sY / tileHeight) >> 0;
+
+		// for (x in 0...columnLength) {
+		// 	var tileX :Int = x - right;
+		// 	var paintX :Float = tileX * tileWidth;
+
+		// 	for (y in 0...rowLength) {
+		// 		var tileY :Int = y - bottom;
+		// 		var gid = _tiles[ tileX + tileY * columns]; // The GID of the tile.
+
+		// 		if (gid > 0) {
+		// 			var symbol = symbols[gid];
+		// 			var paintY :Float = tileY * tileHeight;
+		// 			g.drawSubTexture(symbol.atlas, paintX, paintY, symbol.x, symbol.y, symbol.width, symbol.height);
+		// 		}
+		// 	}
+		// }
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
@@ -318,6 +404,9 @@ class TileSprite extends Sprite
 		if (reuse == null) {
 			reuse = new Point();
 		}
+		// Revalidate xy
+		var local :Matrix = this.getLocalMatrix();
+		this.setXY(local.m02, local.m12);
 
 		this.getViewMatrix().inverseTransform(x, y, reuse);
 		reuse.x = Math.floor(reuse.x / tileWidth);

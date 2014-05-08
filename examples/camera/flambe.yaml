@@ -1,0 +1,66 @@
+# Basic information about the game.
+name: TMXCamera
+description: An example of using cameras with a Tiled map.
+
+# Information about the game developer.
+developer:
+  name: Kipp Ashford
+  url: http://seven2.com
+
+# The game's unique identifier.
+id: com.seven2.tmx
+
+# The game's version string.
+version: 1.0.0
+
+# The main class name.
+main: Main
+
+# The platform to use when invoking `run` or `build` with no arguments.
+default_platform: html
+
+# The initial orientation and fullscreen state on mobile devices.
+orientation: portrait
+fullscreen: true
+
+# Additional flags to pass to the Haxe compiler.
+# haxe_flags: -lib nape -D foobar
+
+# Additional paths to include in the build.
+extra_paths:
+  src: ../../src
+# extra_paths:
+#   assets: dir1 dir2
+#   libs: dir1 dir2
+#   src: ../dir1 ../dir2
+#   web: ["dir1 with spaces", "dir2"]
+
+# Android-specific configuration.
+android:
+  # https://developer.android.com/guide/topics/manifest/manifest-intro.html
+  AndroidManifest.xml: |
+    <manifest android:installLocation="auto">
+      <uses-permission android:name="android.permission.INTERNET" />
+    </manifest>
+
+# iOS-specific configuration.
+ios:
+  # http://developer.apple.com/library/ios/#documentation/general/Reference/InfoPlistKeyReference
+  Info.plist: |
+    <key>UIDeviceFamily</key>
+    <array>
+      <string>1</string>
+      <string>2</string>
+    </array>
+    <key>UIPrerenderedIcon</key>
+    <true/>
+
+# Firefox App-specific configuration.
+firefox:
+  # https://developer.mozilla.org/en-US/docs/Web/Apps/Manifest
+  manifest.webapp:
+    {
+      default_locale: "en",
+      # type: "privileged",
+      # permissions: [...]
+    }
