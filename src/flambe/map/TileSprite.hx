@@ -1,5 +1,6 @@
 package flambe.map;
 
+import flambe.display.BigTexture;
 import flambe.display.Graphics;
 import flambe.display.Sprite;
 import flambe.display.Texture;
@@ -52,7 +53,7 @@ class TileSprite extends Sprite
 	private var _tiles :Array<Int>;
 #end
 	/** comment */
-	private var _buffer :Texture;
+	private var _buffer :BigTexture;
 
 	/* ---------------------------------------------------------------------------------------- */
 	
@@ -107,9 +108,7 @@ class TileSprite extends Sprite
 	 */
 	public function resize(columns :Int, rows :Int)
 	{
-#if debug
 		Assert.that(columns >= 2 && rows >= 2, "invalid size ", [columns, rows]);
-#end
 
 		if (columns == this.columns && rows == this.rows) return;
 		var t = _tiles;
@@ -151,16 +150,13 @@ class TileSprite extends Sprite
 	 */
 	public function appendRow(row :Array<Int>)
 	{
-		#if debug
 		Assert.that(row != null, "row is null");
 		Assert.that(row.length >= columns, "insufficient row values");
-		#end
 
 		var t = columns * rows++;
 		
 		for (i in 0...columns) {
 			_tiles[t + i] = row[i];
-			// __set(t + i, row[i]);
 		}
 		drawToBuffer();
 	}
@@ -175,10 +171,8 @@ class TileSprite extends Sprite
 	 */
 	public function appendColumn(column :Array<Int>)
 	{
-		#if debug
 		Assert.that(column != null, "column is null");
 		Assert.that(column.length >= rows, "insufficient column values");
-		#end
 
 		var t = rows * columns;
 		var l = t + rows;
@@ -292,7 +286,7 @@ class TileSprite extends Sprite
 	 */
 	public function getSymbol(id :Int, ?require :Bool = true) :TileSymbol
 	{
-		#if debug Assert.that(!require || (id < symbols.length && id > 0), "Symbol must be in range.", [id]); #end
+		Assert.that(!require || (id < symbols.length && id > 0), "Symbol must be in range.", [id]);
 		if (id < 1 || id >= symbols.length) {
 			return null;
 		}
@@ -310,7 +304,8 @@ class TileSprite extends Sprite
 			if (_buffer != null) {
 				_buffer.dispose();
 			}
-			_buffer = System.renderer.createTexture(totalWidth, totalHeight);
+			_buffer = new BigTexture(totalWidth, totalHeight);
+			// _buffer = System.renderer.createTexture(totalWidth, totalHeight);
 		}
 
 		// Calculate the area we should draw to.
@@ -354,7 +349,9 @@ class TileSprite extends Sprite
 		if (!this.visible || _buffer == null)
 			return;
 		
-		g.drawTexture(_buffer,0,0);
+		_buffer.draw(g); // Use BigTexture to draw onto our graphics.
+		// g.drawTexture(_buffer,0,0);
+
 		// Calculate the area we should draw to.
 		// var columnLength :Int = columns;
 		// var rowLength :Int = rows;
