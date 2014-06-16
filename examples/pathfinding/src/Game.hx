@@ -14,6 +14,7 @@ import flambe.map.ai.PathAnimator;
 import flambe.map.camera.SpriteCamera;
 import flambe.map.MapSprite;
 import flambe.map.TileSprite;
+import flambe.math.Matrix;
 import flambe.math.Point;
 import flambe.swf.Library;
 import Player;
@@ -210,12 +211,10 @@ class Game extends Component
 	 */
 	private function sortOnY(one :Entity, two :Entity) :Int
 	{
-		var p1 :Sprite = one.get(Sprite);
-		var p2 :Sprite = two.get(Sprite);
-		var y1 :Float = p1.y._;
-		var y2 :Float = p2.y._;
-		if (y1 < y2) return -1;
-		if (y1 > y2) return 1;
+		var p1 :Matrix = one.get(Sprite).getLocalMatrix();
+		var p2 :Matrix = two.get(Sprite).getLocalMatrix();
+		if (p1.m12 < p2.m12) return -1;
+		if (p1.m12 > p2.m12) return 1;
 		return 0;
 	}
 
