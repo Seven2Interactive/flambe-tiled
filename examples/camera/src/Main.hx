@@ -10,7 +10,7 @@ import flambe.map.MapSprite;
 import flambe.map.tmx.TmxParser;
 
 /**
- * Application entry for the pathfinding example.
+ * Application entry for the camera following example.
  * @author Kipp Ashford (volkipp@gmail.com)
  */
 class Main
