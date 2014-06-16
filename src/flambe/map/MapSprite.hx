@@ -110,7 +110,7 @@ class MapSprite extends Sprite
 	 */
 	public function addLayer(id :String, layer :Entity)
 	{
-		#if debug Assert.that(!_names.exists(id), "You may not have duplicate layer names in a map.", [id]); #end
+		Assert.that(!_names.exists(id), "You may not have duplicate layer names in a map.", [id]); 
 
 		var s :Sprite = layer.get(Sprite);
 		if (s == null) {
@@ -146,7 +146,7 @@ class MapSprite extends Sprite
 	 */
 	public function removeLayer(id :String) :Entity
 	{
-		#if debug Assert.that(_names.exists(id), "Trying to remove a layer which doesn't exist.", [id]); #end
+		Assert.that(_names.exists(id), "Trying to remove a layer which doesn't exist.", [id]);
 		var layer :Entity = _names.get(id);
 		_layers.splice(Lambda.indexOf(_layers, layer), 1);
 		_names.remove(id);
@@ -163,7 +163,7 @@ class MapSprite extends Sprite
 	 */
 	public function getLayer(id :String) :Entity
 	{
-		#if debug Assert.that(_names.exists(id), "Layer ids must be added to the MapSprite first.", [id]); #end
+		Assert.that(_names.exists(id), "Layer ids must be added to the MapSprite first.", [id]); 
 		return _names.get(id);
 	}
 
