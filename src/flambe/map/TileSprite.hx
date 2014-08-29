@@ -1,6 +1,7 @@
 package flambe.map;
 
 import flambe.display.BigTexture;
+import flambe.display.BlendMode;
 import flambe.display.Graphics;
 import flambe.display.Sprite;
 import flambe.display.Texture;
@@ -305,6 +306,7 @@ class TileSprite extends Sprite
 				_buffer.dispose();
 			}
 			_buffer = new BigTexture(totalWidth, totalHeight);
+			_buffer.graphics.setBlendMode(BlendMode.Copy);
 			// _buffer = System.renderer.createTexture(totalWidth, totalHeight);
 		}
 
@@ -321,6 +323,8 @@ class TileSprite extends Sprite
 			rowLength = FMath.clamp( Math.ceil( (region.height + tileHeight) / tileHeight), 0, Math.ceil( (rows * tileHeight + sY) / tileHeight) );
 		}
 
+		// var right :Int = cast (sX / tileWidth) >> 0;
+		// var bottom :Int = cast (sY / tileHeight) >> 0;
 		var right :Int = untyped (sX / tileWidth) >> 0;
 		var bottom :Int = untyped (sY / tileHeight) >> 0;
 
@@ -350,40 +354,6 @@ class TileSprite extends Sprite
 			return;
 		
 		_buffer.draw(g); // Use BigTexture to draw onto our graphics.
-		// g.drawTexture(_buffer,0,0);
-
-		// Calculate the area we should draw to.
-		// var columnLength :Int = columns;
-		// var rowLength :Int = rows;
-		// var sX :Float = 0;
-		// var sY :Float = 0;
-
-		// if (region != null) {
-		// 	sX = region.x;
-		// 	sY = region.y;
-		// 	columnLength = FMath.clamp( Math.ceil( (region.width + tileWidth) / tileWidth), 0, Math.ceil( (columns * tileWidth + sX) / tileWidth) );
-		// 	rowLength = FMath.clamp( Math.ceil( (region.height + tileHeight) / tileHeight), 0, Math.ceil( (rows * tileHeight + sY) / tileHeight) );
-		// }
-		// g.drawSubTexture(_buffer, -sX, -sY, -sX, -sY, columnLength * tileWidth, rowLength * tileHeight);
-
-		// var right :Int = untyped (sX / tileWidth) >> 0;
-		// var bottom :Int = untyped (sY / tileHeight) >> 0;
-
-		// for (x in 0...columnLength) {
-		// 	var tileX :Int = x - right;
-		// 	var paintX :Float = tileX * tileWidth;
-
-		// 	for (y in 0...rowLength) {
-		// 		var tileY :Int = y - bottom;
-		// 		var gid = _tiles[ tileX + tileY * columns]; // The GID of the tile.
-
-		// 		if (gid > 0) {
-		// 			var symbol = symbols[gid];
-		// 			var paintY :Float = tileY * tileHeight;
-		// 			g.drawSubTexture(symbol.atlas, paintX, paintY, symbol.x, symbol.y, symbol.width, symbol.height);
-		// 		}
-		// 	}
-		// }
 	}
 
 	/* ---------------------------------------------------------------------------------------- */
