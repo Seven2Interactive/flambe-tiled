@@ -3,6 +3,8 @@ package flambe.display;
 import flambe.display.Graphics;
 import flambe.display.Texture;
 import flambe.math.FMath;
+import flambe.math.Point;
+import flambe.math.Rectangle;
 import flambe.System;
 import flambe.util.Arrays;
 import flambe.util.Assert;
@@ -14,19 +16,19 @@ import flambe.util.Assert;
 class BigTexture
 {
 	/** The width of the texture */
-	public var width(default, null) :Int;
+	public var width(default, null)				:Int;
 	/** The height of the texture */
-	public var height(default, null) :Int;
+	public var height(default, null)			:Int;
     /** The graphics interface to work with */
-    public var graphics(default, null) :Graphics;
+    public var graphics(default, null)			:BigTextureGraphics;
     /** The number of columns total */
-    public var columns(default, null) :Int;
+    public var columns(default, null)			:Int;
     /** The number of rows total */
-    public var rows(default, null) :Int;
+    public var rows(default, null)				:Int;
     /** An array of all our blank textures. */
-    @:allow(flambe.display) var textures :Array<Array<Texture>>;
+    @:allow(flambe.display) var textures		:Array<Array<Texture>>;
     /** The size of the textures */
-    @:allow(flambe.display) var textureSize :Int;
+    @:allow(flambe.display) var textureSize		:Int;
 	
 	/* ---------------------------------------------------------------------------------------- */
 
@@ -41,22 +43,22 @@ class BigTexture
 #if debug trace('Texture:\nwidth:$width\nheight:$height\nmax:$textureSize'); #end
 
 		// set up our array of textures.
-		var nCols:Int = Math.ceil(this.width / this.textureSize);
-		var nRows:Int = Math.ceil(this.height / this.textureSize);
+		columns = Math.ceil(this.width / this.textureSize);
+		rows = Math.ceil(this.height / this.textureSize);
 		this.textures = new Array();
 		var aTexture:Array<Texture> = null;
-		for (i in 0...nCols)
+		for (i in 0...columns)
 		{
 			aTexture = new Array();
-			for (j in 0...nRows)
+			for (j in 0...rows)
 				aTexture.push(System.renderer.createTexture(this.textureSize, this.textureSize));
 			this.textures.push(aTexture);
 		}
 		
 		// see if we should create a BTG or just use a normal graphic.
-		if (nCols == 1 && nRows == 1)
-			this.graphics = textures[0][0].graphics;
-		else
+		//if (columns == 1 && rows == 1)
+			//this.graphics = textures[0][0].graphics;
+		//else
 			this.graphics = new BigTextureGraphics(this);
 	}
 	
@@ -86,6 +88,78 @@ class BigTexture
 	
 	/* ---------------------------------------------------------------------------------------- */
 
+	/**
+	 * Draws the large group of combined textures to the given graphics.
+	 * 
+	 * @param  g :Graphics     [description]
+	 */
+	public function drawSubTexture(g:Graphics, destX :Float, destY :Float, sourceX :Float, sourceY :Float, sourceW :Float, sourceH :Float) :Void
+	{
+		// start our drawing.
+		var nCurWidth:Float = 0;
+		var nCurHeight:Float = 0;
+		var nDX:Float = 0;
+		var nDY:Float = 0;
+		var nSX:Float = 0;
+		var nSY:Float = 0;
+		var nW:Float = 0;
+		var nH:Float = 0;
+		var nRow:Int = 0;
+		var nCol:Int = 0;
+		while (nCurWidth < sourceW)
+		{
+			// reset the height.
+			nCurHeight = 0;
+			
+			// set the horizontal values.
+			nCol = Math.floor((sourceX + nCurWidth) / this.textureSize);
+			nDX = destX + nCurWidth;
+			nSX = (nCurWidth == 0) ? sourceX % this.textureSize : 0;
+			if (nCurWidth == 0)
+			{
+				if (nSX + sourceW < this.textureSize)
+					nW = sourceW;
+				else
+					nW = this.textureSize - nSX;
+			}
+			else if (sourceW - nCurWidth < this.textureSize)
+				nW = sourceW - nCurWidth;
+			else
+				nW = this.textureSize;
+				
+			// draw columns, then move to the right.
+			while (nCurHeight < sourceH)
+			{
+				nRow = Math.floor((destY + nCurHeight) / this.textureSize);
+				nDY = destY + nCurHeight;
+				//nDY = (nCurHeight == 0) ? destY % this.textureSize : 0;
+				nSY = (nCurHeight == 0) ? sourceY % this.textureSize : 0;
+				if (nCurHeight == 0)
+				{
+					if (nSY + sourceH < this.textureSize)
+						nH = sourceH;
+					else
+						nH = this.textureSize - nSY;
+				}
+				else if (sourceH - nCurHeight < this.textureSize)
+					nH = sourceH - nCurHeight;
+				else
+					nH = this.textureSize;
+					
+				// draw to graphic.
+				g.drawSubTexture(this.textures[nCol][nRow], nDX, nDY, nSX, nSY, nW, nH);
+					
+				// add to the height.
+				nCurHeight += nH;
+			}
+			
+			// add to the width.
+			nCurWidth += nW;
+		}
+	}
+	
+	/* ---------------------------------------------------------------------------------------- */
+
 	public function dispose() :Void
 	{
 		var aTexture:Array<Texture> = null;
@@ -101,24 +175,37 @@ class BigTexture
 	
 }
 
+/* ---------------------------------------------------------------------------------------- */
+
 /**
  * The clas to manage the draw calls.
  */
 private class BigTextureGraphics implements Graphics
 {
 	/** The texture we are working with. */
-	private var _manager :BigTexture;
+	private var _manager			:BigTexture;
+	/** Triple array representing a vector of draw calls one to one with the texture map. */
+	private var	_drawCalls			:Array<Array<Array<TextureDrawCall>>>;
 	
 	/* ---------------------------------------------------------------------------------------- */
 
 	public function new(manager :BigTexture) :Void
 	{
 		_manager = manager;
+		
+		// create the array for draw calls..
+		_drawCalls = new Array();
+		for (i in 0..._manager.columns)
+		{
+			_drawCalls.push(new Array());
+			for (j in 0..._manager.rows)
+				_drawCalls[i][j] = new Array();
+		}
 	}
 	
 	/* ---------------------------------------------------------------------------------------- */
 
-    public function save () :Void
+    public function save() :Void
 	{
 		var aTexture:Array<Texture> = null;
 		for (i in 0..._manager.textures.length)
@@ -249,24 +336,8 @@ private class BigTextureGraphics implements Graphics
     /** Draws a texture sub-region at the given point. */
     public function drawSubTexture (texture :Texture, destX :Float, destY :Float, sourceX :Float, sourceY :Float, sourceW :Float, sourceH :Float) :Void
 	{
-//trace("BigTextureGraphics::drawSubTexture()\n" +
-	//"\tDestination: (" + destX + ", " + destY + ")\n" + 
-	//"\tSource: (" + sourceX + ", " + sourceY + ", " + sourceW + ", " + sourceH + ")\n");
-	
 		// get the texture size since we will be using it all the times.
     	var nTexSize :Int = _manager.textureSize;
-		
-		// get all the starting values.
-		var nStartCol:Int = Math.floor(destX / nTexSize);
-		var nStartRow:Int = Math.floor(destY / nTexSize);
-		var nDiffStartX:Float = destX % nTexSize;
-		var nDiffStartY:Float = destY % nTexSize;
-		
-		// get the ending values.
-		var nEndCol:Int = Math.floor((destX + sourceW) / nTexSize);
-		var nEndRow:Int = Math.floor((destY + sourceH) / nTexSize);
-		var nDiffEndX:Float = (destX + sourceW) % nTexSize;
-		var nDiffEndY:Float = (destY + sourceH) % nTexSize;
 		
 		// start our drawing.
 		var nCurWidth:Float = 0;
@@ -319,12 +390,11 @@ private class BigTextureGraphics implements Graphics
 					nH = nTexSize;
 					
 				
-//trace("DRAWING TEXTURE(" + nCol + ", " + nRow + ")\n" +
-		//"\tDestination: (" + nDX + ", " + nDY + ")\n" + 
-		//"\tSource: (" + nSX + ", " + nSY + ", " + nW + ", " + nH + ")\n");
 				// draw to graphic.
-				_manager.textures[nCol][nRow].graphics.drawSubTexture(texture, nDX, nDY, nSX, nSY, nW, nH);
-					
+				_drawCalls[nCol][nRow].push(new TextureDrawCall(texture,
+											new Point(nDX, nDY),
+											new Rectangle(nSX, nSY, nW, nH)));
+											
 				// add to the height.
 				nCurHeight += nH;
 			}
@@ -333,6 +403,31 @@ private class BigTextureGraphics implements Graphics
 			nCurWidth += nW;
 		}
     }
+	
+	/* ---------------------------------------------------------------------------------------- */
+
+    /** Writes all draw calls to the texture. */
+    public function flush():Void
+	{
+		var drawCall:TextureDrawCall = null;
+		for (i in 0..._drawCalls.length)
+		{
+			for (j in 0..._drawCalls[i].length)
+			{
+				for (k in 0..._drawCalls[i][j].length)
+				{
+					drawCall = _drawCalls[i][j][k];
+					_manager.textures[i][j].graphics.drawSubTexture(drawCall.texture,
+																	drawCall.destination.x,
+																	drawCall.destination.y,
+																	drawCall.source.x,
+																	drawCall.source.y,
+																	drawCall.source.width,
+																	drawCall.source.height);
+				}
+			}
+		}
+	}
 	
 	/* ---------------------------------------------------------------------------------------- */
 
@@ -350,4 +445,28 @@ private class BigTextureGraphics implements Graphics
 	
 	/* ---------------------------------------------------------------------------------------- */
 
+}
+
+/* ---------------------------------------------------------------------------------------- */
+
+private class TextureDrawCall
+{
+	/** The texture. */
+	public var texture(default, null)		:Texture;
+	/** The destination. */
+	public var destination(default, null)	:Point;
+	/** source. */
+	public var source(default, null)		:Rectangle;
+	
+	/* ---------------------------------------------------------------------------------------- */
+
+	public function new(t:Texture, d:Point, s:Rectangle):Void
+	{
+		this.texture = t;
+		this.destination = d;
+		this.source = s;
+	}
+	
+	/* ---------------------------------------------------------------------------------------- */
+	
 }
