@@ -3,8 +3,6 @@ package flambe.display;
 import flambe.display.Graphics;
 import flambe.display.Texture;
 import flambe.math.FMath;
-import flambe.math.Point;
-import flambe.math.Rectangle;
 import flambe.System;
 import flambe.util.Arrays;
 import flambe.util.Assert;
@@ -55,11 +53,7 @@ class BigTexture
 			this.textures.push(aTexture);
 		}
 		
-		// see if we should create a BTG or just use a normal graphic.
-		//if (columns == 1 && rows == 1)
-			//this.graphics = textures[0][0].graphics;
-		//else
-			this.graphics = new BigTextureGraphics(this);
+		this.graphics = new BigTextureGraphics(this);
 	}
 	
 	/* ---------------------------------------------------------------------------------------- */
@@ -194,12 +188,12 @@ private class BigTextureGraphics implements Graphics
 		_manager = manager;
 		
 		// create the array for draw calls..
-		_drawCalls = new Array();
+		_drawCalls = [];
 		for (i in 0..._manager.columns)
 		{
-			_drawCalls.push(new Array());
+			_drawCalls.push([]);
 			for (j in 0..._manager.rows)
-				_drawCalls[i][j] = new Array();
+				_drawCalls[i][j] = [];
 		}
 	}
 	
@@ -391,9 +385,7 @@ private class BigTextureGraphics implements Graphics
 					
 				
 				// draw to graphic.
-				_drawCalls[nCol][nRow].push(new TextureDrawCall(texture,
-											new Point(nDX, nDY),
-											new Rectangle(nSX, nSY, nW, nH)));
+				_drawCalls[nCol][nRow].push(new TextureDrawCall(texture, nDX, nDY, nSX, nSY, nW, nH));
 											
 				// add to the height.
 				nCurHeight += nH;
@@ -409,7 +401,7 @@ private class BigTextureGraphics implements Graphics
     /** Writes all draw calls to the texture. */
     public function flush():Void
 	{
-		var drawCall:TextureDrawCall = null;
+		var drawCall :TextureDrawCall = null;
 		for (i in 0..._drawCalls.length)
 		{
 			for (j in 0..._drawCalls[i].length)
@@ -418,12 +410,12 @@ private class BigTextureGraphics implements Graphics
 				{
 					drawCall = _drawCalls[i][j][k];
 					_manager.textures[i][j].graphics.drawSubTexture(drawCall.texture,
-																	drawCall.destination.x,
-																	drawCall.destination.y,
-																	drawCall.source.x,
-																	drawCall.source.y,
-																	drawCall.source.width,
-																	drawCall.source.height);
+																	drawCall.destX,
+																	drawCall.destY,
+																	drawCall.sourceX,
+																	drawCall.sourceY,
+																	drawCall.sourceW,
+																	drawCall.sourceH);
 				}
 			}
 		}
@@ -447,26 +439,34 @@ private class BigTextureGraphics implements Graphics
 
 }
 
-/* ---------------------------------------------------------------------------------------- */
 
 private class TextureDrawCall
 {
 	/** The texture. */
-	public var texture(default, null)		:Texture;
-	/** The destination. */
-	public var destination(default, null)	:Point;
-	/** source. */
-	public var source(default, null)		:Rectangle;
+	public var texture :Texture;
+	/** The destination X */
+	public var destX :Float;
+	/** The destination Y */
+	public var destY :Float;
+	/** The source X */
+	public var sourceX :Float;
+	/** The source X */
+	public var sourceY :Float;
+	/** The source width */
+	public var sourceW :Float;
+	/** The source height */
+	public var sourceH :Float;
 	
 	/* ---------------------------------------------------------------------------------------- */
 
-	public function new(t:Texture, d:Point, s:Rectangle):Void
+	public function new(t:Texture, dX :Float, dY :Float, sX :Float, sY :Float, sW :Float, sH :Float) :Void
 	{
 		this.texture = t;
-		this.destination = d;
-		this.source = s;
-	}
-	
-	/* ---------------------------------------------------------------------------------------- */
-	
+		this.destX = dX;
+		this.destY = dY;
+		this.sourceX = sX;
+		this.sourceY = sY;
+		this.sourceW = sW;
+		this.sourceH = sH;
+	}	
 }
