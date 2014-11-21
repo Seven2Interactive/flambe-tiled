@@ -306,7 +306,7 @@ class TileSprite extends Sprite
 				_buffer.dispose();
 			}
 			_buffer = new BigTexture(totalWidth, totalHeight);
-			_buffer.graphics.setBlendMode(BlendMode.Copy);
+			// _buffer.graphics.setBlendMode(BlendMode.Copy);
 			// _buffer = System.renderer.createTexture(totalWidth, totalHeight);
 		}
 
