@@ -27,6 +27,10 @@ import js.html.Uint32Array;
  */
 class TileSprite extends Sprite
 {
+    inline static private var FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+    inline static private var FLIPPED_VERTICALLY_FLAG   = 0x40000000;
+    inline static private var FLIPPED_DIAGONALLY_FLAG   = 0x20000000;
+    
 	/** The symbols used to render the layer. Each index in the array corresponds to the id of the symbol to be rendered. */
 	public var symbols (default, null) :Array<TileSymbol>;
 	/** The width of each tile. */
@@ -287,6 +291,7 @@ class TileSprite extends Sprite
 	 */
 	public function getSymbol(id :Int, ?require :Bool = true) :TileSymbol
 	{
+        id &= ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
 		Assert.that(!require || (id < symbols.length && id > 0), "Symbol must be in range.", [id]);
 		if (id < 1 || id >= symbols.length) {
 			return null;
@@ -334,12 +339,43 @@ class TileSprite extends Sprite
 
 			for (y in 0...rowLength) {
 				var tileY :Int = y - bottom;
-				var gid = _tiles[ tileX + tileY * columns]; // The GID of the tile.
-
+				var gid:UInt = _tiles[ tileX + tileY * columns]; // The GID of the tile.
+                var flipped_diagonally:Bool = (gid & FLIPPED_DIAGONALLY_FLAG) > 0;
+                var flipped_horizontally:Bool = (gid & FLIPPED_HORIZONTALLY_FLAG) > 0;
+                var flipped_vertically:Bool = (gid & FLIPPED_VERTICALLY_FLAG) > 0;
+            
+                gid &= ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
+            
 				if (gid > 0) {
 					var symbol = symbols[gid];
 					var paintY :Float = tileY * tileHeight;
-					_buffer.graphics.drawSubTexture(symbol.atlas, paintX, paintY, symbol.x, symbol.y, symbol.width, symbol.height);
+                    
+                    var targetX = paintX;
+                    var targetY = paintY;
+                    
+                    _buffer.graphics.save();
+                    
+                    if(flipped_diagonally) {
+                        var _flipped_horizontally = flipped_horizontally;
+                        flipped_horizontally = flipped_vertically;
+                        flipped_vertically = _flipped_horizontally;
+                        targetY=targetX;
+                        targetX=paintY;
+                        _buffer.graphics.transform(0,1,1,0,0,0);
+                    }
+                        
+                    if(flipped_horizontally) {
+                        _buffer.graphics.transform(-1,0,0,1,0,0);
+                        targetX= -targetX - symbol.width;
+                    }
+                    if(flipped_vertically) {
+                        _buffer.graphics.transform(1,0,0,-1,0,0);
+                        targetY= -targetY - symbol.height;
+                    }
+                        
+                    _buffer.graphics.drawSubTexture(symbol.atlas, targetX, targetY, symbol.x, symbol.y, symbol.width, symbol.height);
+                    
+                    _buffer.graphics.restore();
 				}
 			}
 		}
